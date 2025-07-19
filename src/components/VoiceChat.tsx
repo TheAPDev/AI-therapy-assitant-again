@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Phone, PhoneOff, Mic, MicOff, Volume2 } from 'lucide-react';
+import { Phone, PhoneOff, Mic, MicOff } from 'lucide-react';
 import { AIFriend } from '../App';
 
 interface VoiceChatProps {
@@ -12,7 +12,7 @@ const VoiceChat: React.FC<VoiceChatProps> = ({ friend }) => {
   const [callDuration, setCallDuration] = useState(0);
 
   useEffect(() => {
-    let interval: NodeJS.Timeout;
+    let interval: ReturnType<typeof setInterval>;
     if (isCallActive) {
       interval = setInterval(() => {
         setCallDuration(prev => prev + 1);
@@ -41,9 +41,22 @@ const VoiceChat: React.FC<VoiceChatProps> = ({ friend }) => {
     setIsMuted(!isMuted);
   };
 
+  // Helper to map color theme to gradient class
+  const getGradientClass = (color: string) => {
+    if (!color) return '';
+    if (color.includes('pink')) return 'gradient-pink-rose';
+    if (color.includes('indigo')) return 'gradient-indigo-blue';
+    if (color.includes('orange') || color.includes('yellow')) return 'gradient-orange-yellow';
+    if (color.includes('purple') && color.includes('pink')) return 'gradient-purple-pink';
+    if (color.includes('green') || color.includes('teal')) return 'gradient-green-teal';
+    if (color.includes('blue') && color.includes('purple')) return 'gradient-blue-purple';
+    return '';
+  };
+  const gradientClass = getGradientClass(friend.color);
+
   if (!isCallActive) {
     return (
-      <div className="min-h-screen bg-black flex flex-col items-center justify-center p-6">
+      <div className={`min-h-screen theme-gradient-bg ${gradientClass} flex flex-col items-center justify-center p-6`}>
         <div className="text-center mb-12">
           <div className="bg-gray-800 rounded-full p-8 mb-6 border border-gray-700">
             <Phone className="text-white" size={64} />
@@ -67,6 +80,8 @@ const VoiceChat: React.FC<VoiceChatProps> = ({ friend }) => {
         <button
           onClick={startCall}
           className="bg-white text-black rounded-full p-6 hover:bg-gray-200 transition-all duration-200 hover:scale-105"
+          title="Start Voice Session"
+          aria-label="Start Voice Session"
         >
           <Phone size={32} />
         </button>
@@ -76,7 +91,7 @@ const VoiceChat: React.FC<VoiceChatProps> = ({ friend }) => {
   }
 
   return (
-    <div className="min-h-screen bg-black flex flex-col items-center justify-center p-6">
+    <div className={`min-h-screen theme-gradient-bg ${gradientClass} flex flex-col items-center justify-center p-6`}>
       {/* Call Status */}
       <div className="text-center mb-12">
         <div className={`bg-gradient-to-r ${friend.color} rounded-full p-8 mb-6 border border-gray-700 animate-pulse`}>
@@ -94,12 +109,8 @@ const VoiceChat: React.FC<VoiceChatProps> = ({ friend }) => {
         {[...Array(5)].map((_, i) => (
           <div
             key={i}
-            className="bg-white rounded-full animate-pulse"
-            style={{
-              width: Math.random() * 8 + 4 + 'px',
-              height: Math.random() * 32 + 16 + 'px',
-              animationDelay: i * 0.1 + 's',
-            }}
+            className={`bg-white rounded-full animate-pulse voice-bar voice-bar-${i}`}
+            aria-label={`Voice visualization bar ${i+1}`}
           />
         ))}
       </div>
@@ -113,6 +124,8 @@ const VoiceChat: React.FC<VoiceChatProps> = ({ friend }) => {
               ? 'bg-red-600 hover:bg-red-700' 
               : 'bg-gray-800 hover:bg-gray-700 border border-gray-600'
           }`}
+          title={isMuted ? 'Unmute Microphone' : 'Mute Microphone'}
+          aria-label={isMuted ? 'Unmute Microphone' : 'Mute Microphone'}
         >
           {isMuted ? <MicOff className="text-white" size={24} /> : <Mic className="text-white" size={24} />}
         </button>
@@ -120,6 +133,8 @@ const VoiceChat: React.FC<VoiceChatProps> = ({ friend }) => {
         <button
           onClick={endCall}
           className="bg-red-600 hover:bg-red-700 rounded-full p-6 transition-all duration-200 hover:scale-105"
+          title="End Call"
+          aria-label="End Call"
         >
           <PhoneOff className="text-white" size={32} />
         </button>

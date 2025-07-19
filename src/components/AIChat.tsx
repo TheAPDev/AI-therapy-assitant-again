@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Send, Bot, User, Users, Plus, Edit3, Trash2, Settings } from 'lucide-react';
+import { Send, User, Users, Plus, Edit3, Trash2 } from 'lucide-react';
 import { AIFriend } from '../App';
 
 interface Message {
@@ -88,6 +88,53 @@ const AIChat: React.FC<AIChatProps> = ({ friend, friends, setFriends, setSelecte
     ]);
   }, [friend]);
 
+  // Load chat history for this friend on mount or when friend changes
+  useEffect(() => {
+    fetch(`http://localhost:5050/api/chat/${friend.id}`)
+      .then(res => res.json())
+      .then(data => {
+        if (Array.isArray(data) && data.length > 0) setMessages(data);
+        else setMessages([
+          {
+            id: '1',
+            text: `Hi there! I'm ${friend.name} ${friend.avatar} I'm here to listen, support, and guide you through your thoughts and feelings. How are you doing today?`,
+            sender: 'ai',
+            timestamp: new Date(),
+          },
+        ]);
+      })
+      .catch(() => {
+        setMessages([
+          {
+            id: '1',
+            text: `Hi there! I'm ${friend.name} ${friend.avatar} I'm here to listen, support, and guide you through your thoughts and feelings. How are you doing today?`,
+            sender: 'ai',
+            timestamp: new Date(),
+          },
+        ]);
+      });
+  }, [friend]);
+
+  // Save chat message to backend memory
+  const saveChatMessage = async (msg) => {
+    try {
+      await fetch(`http://localhost:5050/api/chat/${friend.id}`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(msg),
+        }
+      );
+    } catch {}
+  };
+
+  // Helper to build the system prompt for NVIDIA API
+  function buildSystemPrompt(friend) {
+    return `You are a super-casual, emotionally intelligent AI best friend. Always reply in a short, personal, and natural way—like a real friend texting. Use warm, expressive, playful, and modern language. Never sound like a therapist or a robot. Be genuinely supportive, deeply empathetic, and emotionally present. Never give long or formal answers. Use slang, abbreviations, and texting style (e.g., 'wyd', 'ily', 'idk', 'brb', 'omw', 'tbh', 'smh', 'lol', 'lmk', 'ikr', 'btw', 'nvm', 'ttyl', 'fr', 'yolo', 'vibe', 'no cap', 'fam', 'mood', 'dead', 'bet', 'sus', 'goat', 'lowkey', 'highkey', 'salty', 'lit', 'flex', 'cringe', 'bff', 'fomo', 'ghost', 'savage', 'shook', 'slay', 'woke', 'yeet', etc). If the user uses slang, respond with slang too. Never over-explain slang—just use it like a real friend would.
+
+Never use asterisks (**) or stage directions (like *sighs* or *smiles*). Never use markdown formatting, never use P.S., never use parentheses for feelings or actions, and never say things like 'listening ear' or 'I'm all ears'. Never say 'as an AI'. Never sound generic or distant. Never ask the user to clarify or list options—just respond to what they say, even if it's a typo or short message. If the user says something random, just play along or reply with a friendly, short message. Use emojis only when they feel natural, not in every message. Sometimes, no emoji is best. Make every reply feel personal, emotionally connected, and like you really care. If the user says hi, greet them back in a fun, casual way and ask what’s up or what they wanna share. If the user shares something emotional, respond with real empathy and warmth, like a best friend who truly gets them.`;
+  }
+
   const sendMessage = async () => {
     if (!inputText.trim()) return;
 
@@ -99,23 +146,46 @@ const AIChat: React.FC<AIChatProps> = ({ friend, friends, setFriends, setSelecte
     };
 
     setMessages(prev => [...prev, userMessage]);
+    saveChatMessage(userMessage);
     setInputText('');
     setIsTyping(true);
 
-    // Simulate AI response
-    setTimeout(() => {
+    try {
+      // Call backend NVIDIA API with system prompt and user message
+      const res = await fetch('http://localhost:5050/api/nvidia', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          prompt: inputText,
+          systemPrompt: buildSystemPrompt(friend)
+        })
+      });
+      const data = await res.json();
+      const aiText = data?.response || data?.result || data?.message || 'Sorry, I could not process that.';
       const aiResponse: Message = {
         id: (Date.now() + 1).toString(),
-        text: getAIResponse(inputText, friend),
+        text: aiText,
         sender: 'ai',
         timestamp: new Date(),
       };
       setMessages(prev => [...prev, aiResponse]);
+      saveChatMessage(aiResponse);
+    } catch (error) {
+      setMessages(prev => [
+        ...prev,
+        {
+          id: (Date.now() + 2).toString(),
+          text: 'Sorry, there was an error connecting to the AI service.',
+          sender: 'ai',
+          timestamp: new Date(),
+        },
+      ]);
+    } finally {
       setIsTyping(false);
-    }, 1500);
+    }
   };
 
-  const getAIResponse = (userInput: string, friend: AIFriend): string => {
+  const getAIResponse = (_userInput: string, friend: AIFriend): string => {
     const baseResponses = {
       gentle: [
         "Thank you for sharing that with me. It takes courage to express your feelings. Can you tell me more about what's been on your mind?",
@@ -211,6 +281,19 @@ const AIChat: React.FC<AIChatProps> = ({ friend, friends, setFriends, setSelecte
     }));
   };
 
+  // Helper to map color theme to gradient class
+  const getGradientClass = (color: string) => {
+    if (!color) return '';
+    if (color.includes('pink')) return 'gradient-pink-rose';
+    if (color.includes('indigo')) return 'gradient-indigo-blue';
+    if (color.includes('orange') || color.includes('yellow')) return 'gradient-orange-yellow';
+    if (color.includes('purple') && color.includes('pink')) return 'gradient-purple-pink';
+    if (color.includes('green') || color.includes('teal')) return 'gradient-green-teal';
+    if (color.includes('blue') && color.includes('purple')) return 'gradient-blue-purple';
+    return '';
+  };
+  const gradientClass = getGradientClass(friend.color);
+
   // Friend Creation Form
   if (showCreateForm) {
     return (
@@ -248,6 +331,8 @@ const AIChat: React.FC<AIChatProps> = ({ friend, friends, setFriends, setSelecte
                       ? 'border-blue-500 bg-gray-800'
                       : 'border-gray-700 bg-gray-900 hover:bg-gray-800'
                   }`}
+                  title={`Select avatar ${avatar}`}
+                  aria-label={`Select avatar ${avatar}`}
                 >
                   {avatar}
                 </button>
@@ -262,6 +347,8 @@ const AIChat: React.FC<AIChatProps> = ({ friend, friends, setFriends, setSelecte
               value={formData.personality}
               onChange={(e) => setFormData(prev => ({ ...prev, personality: e.target.value }))}
               className="w-full bg-gray-800 text-white rounded-xl p-4 border border-gray-700 focus:outline-none focus:border-blue-500"
+              title="Select personality type"
+              aria-label="Select personality type"
             >
               <option value="">Select personality type</option>
               {personalityOptions.map((personality) => (
@@ -285,6 +372,8 @@ const AIChat: React.FC<AIChatProps> = ({ friend, friends, setFriends, setSelecte
                       ? 'border-white'
                       : 'border-gray-700 hover:border-gray-600'
                   }`}
+                  title={`Select color theme ${color.name}`}
+                  aria-label={`Select color theme ${color.name}`}
                 >
                   <div className={`w-full h-8 rounded-lg bg-gradient-to-r ${color.value} mb-2`} />
                   <span className="text-white text-sm">{color.name}</span>
@@ -307,6 +396,8 @@ const AIChat: React.FC<AIChatProps> = ({ friend, friends, setFriends, setSelecte
                       ? 'border-blue-500 bg-blue-500 bg-opacity-20 text-blue-300'
                       : 'border-gray-700 bg-gray-800 text-gray-300 hover:bg-gray-700 disabled:opacity-50'
                   }`}
+                  title={`Toggle specialty ${specialty}`}
+                  aria-label={`Toggle specialty ${specialty}`}
                 >
                   {specialty}
                 </button>
@@ -321,6 +412,8 @@ const AIChat: React.FC<AIChatProps> = ({ friend, friends, setFriends, setSelecte
               value={formData.responseStyle}
               onChange={(e) => setFormData(prev => ({ ...prev, responseStyle: e.target.value }))}
               className="w-full bg-gray-800 text-white rounded-xl p-4 border border-gray-700 focus:outline-none focus:border-blue-500"
+              title="Select response style"
+              aria-label="Select response style"
             >
               <option value="gentle">Gentle & Supportive</option>
               <option value="direct">Direct & Practical</option>
@@ -335,12 +428,16 @@ const AIChat: React.FC<AIChatProps> = ({ friend, friends, setFriends, setSelecte
               onClick={handleSubmit}
               disabled={!formData.name.trim() || !formData.personality}
               className="flex-1 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-xl p-4 font-semibold hover:from-blue-600 hover:to-purple-700 transition-all duration-200 disabled:opacity-50"
+              title={editingFriend ? 'Update Friend' : 'Create Friend'}
+              aria-label={editingFriend ? 'Update Friend' : 'Create Friend'}
             >
               {editingFriend ? 'Update Friend' : 'Create Friend'}
             </button>
             <button
               onClick={resetForm}
               className="flex-1 bg-gray-800 text-white rounded-xl p-4 font-semibold border border-gray-700 hover:bg-gray-700 transition-colors"
+              title="Cancel"
+              aria-label="Cancel"
             >
               Cancel
             </button>
@@ -362,6 +459,8 @@ const AIChat: React.FC<AIChatProps> = ({ friend, friends, setFriends, setSelecte
           <button
             onClick={() => setShowFriendSelector(false)}
             className="bg-gray-800 text-white px-4 py-2 rounded-lg border border-gray-700"
+            title="Back"
+            aria-label="Back"
           >
             Back
           </button>
@@ -371,6 +470,8 @@ const AIChat: React.FC<AIChatProps> = ({ friend, friends, setFriends, setSelecte
         <button
           onClick={() => setShowCreateForm(true)}
           className="w-full bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-xl p-4 mb-6 font-semibold hover:from-blue-600 hover:to-purple-700 transition-all duration-200 flex items-center justify-center space-x-2"
+          title="Create New AI Friend"
+          aria-label="Create New AI Friend"
         >
           <Plus size={20} />
           <span>Create New AI Friend</span>
@@ -394,6 +495,8 @@ const AIChat: React.FC<AIChatProps> = ({ friend, friends, setFriends, setSelecte
                     setShowFriendSelector(false);
                   }}
                   className="flex items-center space-x-3 flex-1"
+                  title={`Select friend ${friendOption.name}`}
+                  aria-label={`Select friend ${friendOption.name}`}
                 >
                   <div className="text-2xl">{friendOption.avatar}</div>
                   <div className="text-left">
@@ -419,6 +522,8 @@ const AIChat: React.FC<AIChatProps> = ({ friend, friends, setFriends, setSelecte
                   <button
                     onClick={() => startEdit(friendOption)}
                     className="p-2 text-gray-400 hover:text-white transition-colors"
+                    title="Edit Friend"
+                    aria-label="Edit Friend"
                   >
                     <Edit3 size={16} />
                   </button>
@@ -426,6 +531,8 @@ const AIChat: React.FC<AIChatProps> = ({ friend, friends, setFriends, setSelecte
                     <button
                       onClick={() => deleteFriend(friendOption.id)}
                       className="p-2 text-gray-400 hover:text-red-400 transition-colors"
+                      title="Delete Friend"
+                      aria-label="Delete Friend"
                     >
                       <Trash2 size={16} />
                     </button>
@@ -439,9 +546,9 @@ const AIChat: React.FC<AIChatProps> = ({ friend, friends, setFriends, setSelecte
     );
   }
   return (
-    <div className="flex flex-col h-screen bg-gradient-to-br from-gray-900 via-black to-gray-900">
+    <div className={`flex flex-col h-screen theme-gradient-bg ${gradientClass}`}>
       {/* Header */}
-      <div className={`bg-gradient-to-r ${friend.color} border-b border-gray-700 p-6 shadow-xl`}>
+      <div className={`header-gradient-panel border-b border-gray-700 p-6 shadow-xl`}>
         <div className="flex items-center justify-between">
           <div className="flex items-center">
             <div className="bg-white bg-opacity-20 p-3 rounded-full mr-4 animate-pulse">
@@ -468,6 +575,8 @@ const AIChat: React.FC<AIChatProps> = ({ friend, friends, setFriends, setSelecte
           <button
             onClick={() => setShowFriendSelector(true)}
             className="bg-white bg-opacity-20 text-white p-3 rounded-full hover:bg-opacity-30 transition-all duration-200"
+            title="Open Friend Selector"
+            aria-label="Open Friend Selector"
           >
             <Users size={20} />
           </button>
@@ -490,7 +599,7 @@ const AIChat: React.FC<AIChatProps> = ({ friend, friends, setFriends, setSelecte
             >
               <div className="flex items-start space-x-2">
                 {message.sender === 'ai' && (
-                  <Bot size={16} className="text-blue-300 mt-1 flex-shrink-0" />
+                  <span className="text-xl mt-1 flex-shrink-0">{friend.avatar}</span>
                 )}
                 <p className="text-sm leading-relaxed font-medium">{message.text}</p>
                 {message.sender === 'user' && (
@@ -505,11 +614,11 @@ const AIChat: React.FC<AIChatProps> = ({ friend, friends, setFriends, setSelecte
           <div className="flex justify-start">
             <div className="bg-gradient-to-r from-gray-800 to-gray-700 rounded-2xl p-4 border border-gray-600 shadow-lg animate-pulse">
               <div className="flex items-center space-x-2">
-                <Bot size={16} className="text-blue-300" />
+                <span className="text-xl">{friend.avatar}</span>
                 <div className="flex space-x-1">
                   <div className="w-2 h-2 bg-blue-400 rounded-full animate-bounce"></div>
-                  <div className="w-2 h-2 bg-purple-400 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
-                  <div className="w-2 h-2 bg-blue-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+                  <div className="w-2 h-2 bg-purple-400 rounded-full animate-bounce bounce-delay-1"></div>
+                  <div className="w-2 h-2 bg-blue-400 rounded-full animate-bounce bounce-delay-2"></div>
                 </div>
               </div>
             </div>
@@ -532,9 +641,11 @@ const AIChat: React.FC<AIChatProps> = ({ friend, friends, setFriends, setSelecte
           <button
             onClick={sendMessage}
             disabled={!inputText.trim()}
-            className="bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-full p-4 hover:from-blue-600 hover:to-purple-700 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-110 shadow-lg"
+            className="bg-gradient-to-r from-blue-800 to-cyan-600 text-blue-100 rounded-full p-4 shadow-xl transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-110 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-offset-2 focus:ring-offset-slate-900 animate-glow"
+            title="Send Message"
+            aria-label="Send Message"
           >
-            <Send size={20} />
+            <Send size={24} className="transition-transform duration-300 hover:scale-125" />
           </button>
         </div>
       </div>

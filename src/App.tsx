@@ -33,6 +33,27 @@ function App() {
   ]);
   const [selectedFriend, setSelectedFriend] = useState<AIFriend>(friends[0]);
 
+  // Persist selected color theme for all tabs
+  React.useEffect(() => {
+    if (selectedFriend?.color) {
+      localStorage.setItem('selectedFriendColor', selectedFriend.color);
+    }
+  }, [selectedFriend]);
+
+  // Helper to map color theme to gradient class
+  const getGradientClass = (color: string) => {
+    if (!color) return '';
+    if (color.includes('pink')) return 'gradient-pink-rose';
+    if (color.includes('indigo')) return 'gradient-indigo-blue';
+    if (color.includes('orange') || color.includes('yellow')) return 'gradient-orange-yellow';
+    if (color.includes('purple') && color.includes('pink')) return 'gradient-purple-pink';
+    if (color.includes('green') || color.includes('teal')) return 'gradient-green-teal';
+    if (color.includes('blue') && color.includes('purple')) return 'gradient-blue-purple';
+    return '';
+  };
+
+  const gradientClass = getGradientClass(selectedFriend.color);
+
   const renderActiveComponent = () => {
     switch (activeTab) {
       case 'chat':
@@ -64,12 +85,11 @@ function App() {
 
   return (
     <div className="min-h-screen bg-black text-white">
-      <div className="max-w-md mx-auto bg-black min-h-screen relative">
+      <div className={`max-w-md mx-auto min-h-screen relative theme-gradient-bg ${gradientClass}`}>
         {/* Main Content */}
         <div className="pb-20">
           {renderActiveComponent()}
         </div>
-        
         {/* Bottom Navigation */}
         <Navigation activeTab={activeTab} onTabChange={setActiveTab} />
       </div>

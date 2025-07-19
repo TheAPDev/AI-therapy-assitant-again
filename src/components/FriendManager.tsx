@@ -157,6 +157,8 @@ const FriendManager: React.FC<FriendManagerProps> = ({
                       ? 'border-blue-500 bg-gray-800'
                       : 'border-gray-700 bg-gray-900 hover:bg-gray-800'
                   }`}
+                  title={`Select avatar ${avatar}`}
+                  aria-label={`Select avatar ${avatar}`}
                 >
                   {avatar}
                 </button>
@@ -171,6 +173,8 @@ const FriendManager: React.FC<FriendManagerProps> = ({
               value={formData.personality}
               onChange={(e) => setFormData(prev => ({ ...prev, personality: e.target.value }))}
               className="w-full bg-gray-800 text-white rounded-xl p-4 border border-gray-700 focus:outline-none focus:border-blue-500"
+              title="Select personality type"
+              aria-label="Select personality type"
             >
               <option value="">Select personality type</option>
               {personalityOptions.map((personality) => (
@@ -194,6 +198,8 @@ const FriendManager: React.FC<FriendManagerProps> = ({
                       ? 'border-white'
                       : 'border-gray-700 hover:border-gray-600'
                   }`}
+                  title={`Select color theme ${color.name}`}
+                  aria-label={`Select color theme ${color.name}`}
                 >
                   <div className={`w-full h-8 rounded-lg bg-gradient-to-r ${color.value} mb-2`} />
                   <span className="text-white text-sm">{color.name}</span>
@@ -216,6 +222,8 @@ const FriendManager: React.FC<FriendManagerProps> = ({
                       ? 'border-blue-500 bg-blue-500 bg-opacity-20 text-blue-300'
                       : 'border-gray-700 bg-gray-800 text-gray-300 hover:bg-gray-700 disabled:opacity-50'
                   }`}
+                  title={`Toggle specialty ${specialty}`}
+                  aria-label={`Toggle specialty ${specialty}`}
                 >
                   {specialty}
                 </button>
@@ -230,6 +238,8 @@ const FriendManager: React.FC<FriendManagerProps> = ({
               value={formData.responseStyle}
               onChange={(e) => setFormData(prev => ({ ...prev, responseStyle: e.target.value }))}
               className="w-full bg-gray-800 text-white rounded-xl p-4 border border-gray-700 focus:outline-none focus:border-blue-500"
+              title="Select response style"
+              aria-label="Select response style"
             >
               <option value="gentle">Gentle & Supportive</option>
               <option value="direct">Direct & Practical</option>
@@ -244,12 +254,16 @@ const FriendManager: React.FC<FriendManagerProps> = ({
               onClick={handleSubmit}
               disabled={!formData.name.trim() || !formData.personality}
               className="flex-1 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-xl p-4 font-semibold hover:from-blue-600 hover:to-purple-700 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+              title={editingFriend ? 'Update Friend' : 'Create Friend'}
+              aria-label={editingFriend ? 'Update Friend' : 'Create Friend'}
             >
               {editingFriend ? 'Update Friend' : 'Create Friend'}
             </button>
             <button
               onClick={resetForm}
               className="flex-1 bg-gray-800 text-white rounded-xl p-4 font-semibold border border-gray-700 hover:bg-gray-700 transition-colors"
+              title="Cancel"
+              aria-label="Cancel"
             >
               Cancel
             </button>
@@ -270,6 +284,8 @@ const FriendManager: React.FC<FriendManagerProps> = ({
         <button
           onClick={() => setShowCreateForm(true)}
           className="bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-xl p-3 hover:from-blue-600 hover:to-purple-700 transition-all duration-200 hover:scale-105"
+          title="Create New Friend"
+          aria-label="Create New Friend"
         >
           <Plus size={24} />
         </button>
@@ -317,6 +333,8 @@ const FriendManager: React.FC<FriendManagerProps> = ({
                 <button
                   onClick={() => setSelectedFriend(friend)}
                   className="flex items-center space-x-3 flex-1"
+                  title={`Select friend ${friend.name}`}
+                  aria-label={`Select friend ${friend.name}`}
                 >
                   <div className="text-2xl">{friend.avatar}</div>
                   <div className="text-left">
@@ -342,6 +360,8 @@ const FriendManager: React.FC<FriendManagerProps> = ({
                   <button
                     onClick={() => startEdit(friend)}
                     className="p-2 text-gray-400 hover:text-white transition-colors"
+                    title="Edit Friend"
+                    aria-label="Edit Friend"
                   >
                     <Edit3 size={16} />
                   </button>
@@ -349,6 +369,8 @@ const FriendManager: React.FC<FriendManagerProps> = ({
                     <button
                       onClick={() => deleteFriend(friend.id)}
                       className="p-2 text-gray-400 hover:text-red-400 transition-colors"
+                      title="Delete Friend"
+                      aria-label="Delete Friend"
                     >
                       <Trash2 size={16} />
                     </button>

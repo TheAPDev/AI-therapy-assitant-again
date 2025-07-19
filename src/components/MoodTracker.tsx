@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Calendar, TrendingUp, BookOpen, Plus } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { TrendingUp, BookOpen, Plus } from 'lucide-react';
 
 interface MoodEntry {
   id: string;
@@ -44,7 +44,15 @@ const MoodTracker: React.FC = () => {
     { value: 5, emoji: '😊', label: 'Very Good' },
   ];
 
-  const saveMoodEntry = () => {
+  // Load mood entries from backend on mount
+  useEffect(() => {
+    fetch('http://localhost:5050/api/mood')
+      .then(res => res.json())
+      .then(data => setMoodEntries(data))
+      .catch(() => {});
+  }, []);
+
+  const saveMoodEntry = async () => {
     const newEntry: MoodEntry = {
       id: Date.now().toString(),
       date: new Date().toISOString().split('T')[0],
@@ -53,17 +61,37 @@ const MoodTracker: React.FC = () => {
       energy,
       stress,
     };
-
     setMoodEntries(prev => [newEntry, ...prev]);
     setNote('');
     setSelectedMood(5);
     setEnergy(5);
     setStress(5);
+    // Save to backend
+    try {
+      await fetch('http://localhost:5050/api/mood', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(newEntry),
+      });
+    } catch {}
   };
+
+  // Helper to map color theme to gradient class
+  const getGradientClass = () => {
+    const color = localStorage.getItem('selectedFriendColor') || 'from-blue-500 to-purple-600';
+    if (color.includes('pink')) return 'gradient-pink-rose';
+    if (color.includes('indigo')) return 'gradient-indigo-blue';
+    if (color.includes('orange') || color.includes('yellow')) return 'gradient-orange-yellow';
+    if (color.includes('purple') && color.includes('pink')) return 'gradient-purple-pink';
+    if (color.includes('green') || color.includes('teal')) return 'gradient-green-teal';
+    if (color.includes('blue') && color.includes('purple')) return 'gradient-blue-purple';
+    return '';
+  };
+  const gradientClass = getGradientClass();
 
   if (showJournal) {
     return (
-      <div className="min-h-screen bg-black p-6">
+      <div className={`min-h-screen theme-gradient-bg ${gradientClass} p-6`}>
         <div className="flex items-center justify-between mb-6">
           <h1 className="text-2xl font-bold text-white">Mood Journal</h1>
           <button
@@ -106,7 +134,7 @@ const MoodTracker: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-black p-6">
+    <div className={`min-h-screen theme-gradient-bg ${gradientClass} p-6`}>
       {/* Header */}
       <div className="flex items-center justify-between mb-8">
         <div>
@@ -116,6 +144,7 @@ const MoodTracker: React.FC = () => {
         <button
           onClick={() => setShowJournal(true)}
           className="bg-gray-800 text-white p-3 rounded-lg border border-gray-700 hover:bg-gray-700 transition-colors"
+          title="Open Mood Journal"
         >
           <BookOpen size={20} />
         </button>
@@ -159,6 +188,9 @@ const MoodTracker: React.FC = () => {
             value={energy}
             onChange={(e) => setEnergy(parseInt(e.target.value))}
             className="w-full accent-white"
+            title="Energy Level"
+            aria-label="Energy Level"
+            placeholder="Energy Level"
           />
           <div className="text-center mt-2">
             <span className="text-white font-medium">{energy}/10</span>
@@ -181,6 +213,9 @@ const MoodTracker: React.FC = () => {
             value={stress}
             onChange={(e) => setStress(parseInt(e.target.value))}
             className="w-full accent-white"
+            title="Stress Level"
+            aria-label="Stress Level"
+            placeholder="Stress Level"
           />
           <div className="text-center mt-2">
             <span className="text-white font-medium">{stress}/10</span>

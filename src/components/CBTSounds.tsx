@@ -118,8 +118,29 @@ const CBTSounds: React.FC = () => {
     setCurrentTime(0);
   };
 
+  // Helper to map color theme to gradient class
+  const getGradientClass = (color: string) => {
+    if (!color) return '';
+    if (color.includes('pink')) return 'gradient-pink-rose';
+    if (color.includes('indigo')) return 'gradient-indigo-blue';
+    if (color.includes('orange') || color.includes('yellow')) return 'gradient-orange-yellow';
+    if (color.includes('purple') && color.includes('pink')) return 'gradient-purple-pink';
+    if (color.includes('green') || color.includes('teal')) return 'gradient-green-teal';
+    if (color.includes('blue') && color.includes('purple')) return 'gradient-blue-purple';
+    return '';
+  };
+  // For demo, use localStorage or fallback color
+  const [color, setColor] = useState(() => {
+    return localStorage.getItem('selectedFriendColor') || 'from-blue-500 to-purple-600';
+  });
+  useEffect(() => {
+    const stored = localStorage.getItem('selectedFriendColor');
+    if (stored) setColor(stored);
+  }, []);
+  const gradientClass = getGradientClass(color);
+
   return (
-    <div className="min-h-screen bg-black p-6">
+    <div className={`min-h-screen theme-gradient-bg ${gradientClass} p-6`}>
       {/* Header */}
       <div className="mb-8">
         <h1 className="text-2xl font-bold text-white mb-2">CBT Sound Therapy</h1>
@@ -191,9 +212,8 @@ const CBTSounds: React.FC = () => {
               <div className="bg-gray-800 rounded-full h-2">
                 <div
                   className="bg-white rounded-full h-2 transition-all duration-300"
-                  style={{
-                    width: `${(currentTime / selectedTrack.duration) * 100}%`,
-                  }}
+                  style={{ width: `${(currentTime / selectedTrack.duration) * 100}%` }}
+                  aria-label="Track progress bar"
                 />
               </div>
             </div>
@@ -203,6 +223,8 @@ const CBTSounds: React.FC = () => {
               <button
                 onClick={resetTrack}
                 className="p-2 text-gray-400 hover:text-white transition-colors"
+                title="Restart Track"
+                aria-label="Restart Track"
               >
                 <RotateCcw size={20} />
               </button>
@@ -210,11 +232,13 @@ const CBTSounds: React.FC = () => {
               <button
                 onClick={togglePlayPause}
                 className="bg-white text-black rounded-full p-4 hover:bg-gray-200 transition-all duration-200 hover:scale-105"
+                title={isPlaying ? 'Pause' : 'Play'}
+                aria-label={isPlaying ? 'Pause' : 'Play'}
               >
                 {isPlaying ? <Pause size={24} /> : <Play size={24} />}
               </button>
 
-              <button className="p-2 text-gray-400 hover:text-white transition-colors">
+              <button className="p-2 text-gray-400 hover:text-white transition-colors" title="Settings" aria-label="Settings">
                 <Settings size={20} />
               </button>
             </div>
@@ -228,8 +252,11 @@ const CBTSounds: React.FC = () => {
                 max="1"
                 step="0.1"
                 value={volume}
-                onChange={(e) => setVolume(parseFloat(e.target.value))}
-                className="flex-1 accent-white"
+                onChange={e => setVolume(parseFloat(e.target.value))}
+                className="w-full accent-white"
+                title="Volume Control"
+                aria-label="Volume Control"
+                placeholder="Volume Control"
               />
             </div>
           </div>

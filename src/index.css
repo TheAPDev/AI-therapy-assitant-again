@@ -33,6 +33,18 @@
   }
 }
 
+@keyframes gradientMove {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
 .animate-fadeIn {
   animation: fadeIn 0.5s ease-out;
 }
@@ -43,6 +55,17 @@
 
 .animate-glow {
   animation: glow 2s ease-in-out infinite;
+}
+
+.animate-gradient-bg {
+  background: linear-gradient(270deg, #1e293b, #2563eb, #38bdf8, #64748b, #1e293b);
+  background-size: 400% 400%;
+  animation: gradientMove 16s ease-in-out infinite;
+}
+
+/* Header panel gradient for differentiation but similar genre */
+.header-gradient-panel {
+  background: linear-gradient(90deg, #1e293b 60%, #2563eb 100%);
 }
 
 /* Custom scrollbar for dark theme */
@@ -61,4 +84,78 @@
 
 ::-webkit-scrollbar-thumb:hover {
   background: #6b7280;
+}
+
+/* === Animated Gradient Backgrounds for Color Themes === */
+
+@keyframes pinkRoseWaves {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+.gradient-pink-rose {
+  background: linear-gradient(120deg, #ffb6d5, #ff5fa2, #ffb6d5, #ff5fa2);
+  background-size: 200% 200%;
+  animation: pinkRoseWaves 18s ease-in-out infinite;
+}
+
+@keyframes indigoBlueDrift {
+  0% { background-position: 0% 100%; }
+  50% { background-position: 100% 0%; }
+  100% { background-position: 0% 100%; }
+}
+.gradient-indigo-blue {
+  background: linear-gradient(135deg, #232b5d, #3b82f6, #6366f1, #232b5d);
+  background-size: 300% 300%;
+  animation: indigoBlueDrift 22s ease-in-out infinite;
+}
+
+@keyframes orangeYellowSunrise {
+  0% { background-position: 0% 0%; }
+  50% { background-position: 100% 100%; }
+  100% { background-position: 0% 0%; }
+}
+.gradient-orange-yellow {
+  background: linear-gradient(120deg, #ffb347, #ffcc33, #fff6b7, #ffb347);
+  background-size: 250% 250%;
+  animation: orangeYellowSunrise 20s ease-in-out infinite;
+}
+
+@keyframes purplePinkTwilight {
+  0% { background-position: 100% 0%; }
+  50% { background-position: 0% 100%; }
+  100% { background-position: 100% 0%; }
+}
+.gradient-purple-pink {
+  background: linear-gradient(135deg, #a18cd1, #fbc2eb, #fcb69f, #a18cd1);
+  background-size: 250% 250%;
+  animation: purplePinkTwilight 24s ease-in-out infinite;
+}
+
+@keyframes greenTealFlow {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+.gradient-green-teal {
+  background: linear-gradient(120deg, #43e97b, #38f9d7, #43e97b);
+  background-size: 200% 200%;
+  animation: greenTealFlow 19s ease-in-out infinite;
+}
+
+@keyframes bluePurpleReflect {
+  0% { background-position: 0% 0%; }
+  50% { background-position: 100% 100%; }
+  100% { background-position: 0% 0%; }
+}
+.gradient-blue-purple {
+  background: linear-gradient(120deg, #3b82f6, #8b5cf6, #6366f1, #3b82f6);
+  background-size: 250% 250%;
+  animation: bluePurpleReflect 21s ease-in-out infinite;
+}
+
+/* Ensure text remains readable */
+.theme-gradient-bg {
+  color: #fff;
+  text-shadow: 0 1px 8px rgba(0,0,0,0.18);
 }
