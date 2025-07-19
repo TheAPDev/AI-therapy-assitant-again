@@ -5,6 +5,7 @@ import axios from 'axios';
 import cors from 'cors';
 import { addMoodEntry, getMoodEntries } from './memory.js';
 import { addChatMessage, getChatHistory } from './chatMemory.js';
+import musicRouter from './music.js';
 
 const app = express();
 app.use(express.json());
@@ -78,6 +79,9 @@ app.get('/api/chat/:friendId', (req, res) => {
   const { friendId } = req.params;
   res.json(getChatHistory(friendId));
 });
+
+// Music routes
+app.use('/api/music', musicRouter);
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {

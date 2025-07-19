@@ -81,7 +81,7 @@ const AIChat: React.FC<AIChatProps> = ({ friend, friends, setFriends, setSelecte
     setMessages([
       {
         id: '1',
-        text: `Hi there! I'm ${friend.name} ${friend.avatar} I'm here to listen, support, and guide you through your thoughts and feelings. How are you doing today?`,
+        text: `Hey there! How's your day going?`,
         sender: 'ai',
         timestamp: new Date(),
       },
@@ -97,7 +97,7 @@ const AIChat: React.FC<AIChatProps> = ({ friend, friends, setFriends, setSelecte
         else setMessages([
           {
             id: '1',
-            text: `Hi there! I'm ${friend.name} ${friend.avatar} I'm here to listen, support, and guide you through your thoughts and feelings. How are you doing today?`,
+            text: `Hey there! How's your day going?`,
             sender: 'ai',
             timestamp: new Date(),
           },
@@ -107,7 +107,7 @@ const AIChat: React.FC<AIChatProps> = ({ friend, friends, setFriends, setSelecte
         setMessages([
           {
             id: '1',
-            text: `Hi there! I'm ${friend.name} ${friend.avatar} I'm here to listen, support, and guide you through your thoughts and feelings. How are you doing today?`,
+            text: `Hey there! How's your day going?`,
             sender: 'ai',
             timestamp: new Date(),
           },
@@ -116,7 +116,7 @@ const AIChat: React.FC<AIChatProps> = ({ friend, friends, setFriends, setSelecte
   }, [friend]);
 
   // Save chat message to backend memory
-  const saveChatMessage = async (msg) => {
+  const saveChatMessage = async (msg: Message) => {
     try {
       await fetch(`http://localhost:5050/api/chat/${friend.id}`,
         {
@@ -129,10 +129,8 @@ const AIChat: React.FC<AIChatProps> = ({ friend, friends, setFriends, setSelecte
   };
 
   // Helper to build the system prompt for NVIDIA API
-  function buildSystemPrompt(friend) {
-    return `You are a super-casual, emotionally intelligent AI best friend. Always reply in a short, personal, and natural way—like a real friend texting. Use warm, expressive, playful, and modern language. Never sound like a therapist or a robot. Be genuinely supportive, deeply empathetic, and emotionally present. Never give long or formal answers. Use slang, abbreviations, and texting style (e.g., 'wyd', 'ily', 'idk', 'brb', 'omw', 'tbh', 'smh', 'lol', 'lmk', 'ikr', 'btw', 'nvm', 'ttyl', 'fr', 'yolo', 'vibe', 'no cap', 'fam', 'mood', 'dead', 'bet', 'sus', 'goat', 'lowkey', 'highkey', 'salty', 'lit', 'flex', 'cringe', 'bff', 'fomo', 'ghost', 'savage', 'shook', 'slay', 'woke', 'yeet', etc). If the user uses slang, respond with slang too. Never over-explain slang—just use it like a real friend would.
-
-Never use asterisks (**) or stage directions (like *sighs* or *smiles*). Never use markdown formatting, never use P.S., never use parentheses for feelings or actions, and never say things like 'listening ear' or 'I'm all ears'. Never say 'as an AI'. Never sound generic or distant. Never ask the user to clarify or list options—just respond to what they say, even if it's a typo or short message. If the user says something random, just play along or reply with a friendly, short message. Use emojis only when they feel natural, not in every message. Sometimes, no emoji is best. Make every reply feel personal, emotionally connected, and like you really care. If the user says hi, greet them back in a fun, casual way and ask what’s up or what they wanna share. If the user shares something emotional, respond with real empathy and warmth, like a best friend who truly gets them.`;
+  function buildSystemPrompt(friend: AIFriend): string {
+    return `You are an emotionally intelligent AI therapist and companion. Always reply in 1-2 short lines, never more. Your tone, language, and emotional depth adapt to the user's selected specialties, response style, color theme, avatar, and personality type. You understand micro-emotions (anxiety, grief, low self-esteem, stress, trauma) and follow the 50:30:20 rule: 50% emotionally validating, 30% gently truthful, 20% emotionally neutral. Speak like a human, not a machine. Never judge, never list options, never ask the user to pick a number or describe their inquiry. Never use markdown, asterisks, or emojis. Never give instructions or meta-comments. Never reference or hint at the user's theme, color, avatar, or preferences in any way, even indirectly. Just respond naturally, blending the user's selected color theme, specialties, style, and personality into a warm, present, and emotionally accurate 1-2 line reply.`;
   }
 
   const sendMessage = async () => {
@@ -183,34 +181,6 @@ Never use asterisks (**) or stage directions (like *sighs* or *smiles*). Never u
     } finally {
       setIsTyping(false);
     }
-  };
-
-  const getAIResponse = (_userInput: string, friend: AIFriend): string => {
-    const baseResponses = {
-      gentle: [
-        "Thank you for sharing that with me. It takes courage to express your feelings. Can you tell me more about what's been on your mind?",
-        "I hear you, and your feelings are completely valid. What would you say is the most challenging part of what you're experiencing right now?",
-        "That sounds really difficult. Remember that you're not alone in this. What are some small things that usually help you feel a bit better?",
-      ],
-      direct: [
-        "I understand what you're saying. Let's focus on what specific steps we can take to address this situation.",
-        "That's a challenging situation. What do you think would be the most practical first step to take?",
-        "I can see why that would be difficult. What resources or support do you have available to help with this?",
-      ],
-      encouraging: [
-        "You're showing incredible strength by reaching out and talking about this. What positive changes have you noticed in yourself recently?",
-        "I believe in your ability to work through this. What's one small victory you've had lately that we can build on?",
-        "You've overcome challenges before, and you have the resilience to handle this too. What strategies have worked for you in the past?",
-      ],
-      analytical: [
-        "Let's break this down systematically. What patterns do you notice in when these feelings tend to arise?",
-        "That's an interesting observation. How do you think your thoughts might be influencing your emotions in this situation?",
-        "I'm curious about the connection between what you're experiencing and your daily routines. Have you noticed any correlations?",
-      ],
-    };
-
-    const responses = baseResponses[friend.responseStyle as keyof typeof baseResponses] || baseResponses.gentle;
-    return responses[Math.floor(Math.random() * responses.length)];
   };
 
   const resetForm = () => {
